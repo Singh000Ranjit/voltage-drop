@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>11kV Feeder Voltage Drop Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #0056b3;
+            text-align: center;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .input-group input[type="text"],
+        .input-group input[type="number"],
+        .input-group select {
+            width: calc(100% - 12px);
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #e9e9e9;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .input-column-headers {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 50px;
+            gap: 10px;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+            padding: 0 0 5px 0;
+            font-size: 0.9em;
+        }
+        .input-column-headers span {
+            text-align: left;
+        }
+        .section-input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 50px;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .section-input-row input, .section-input-row select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        /* Styles for new DT section */
+        .dt-section {
+            margin-top: 5px;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .dt-section-header {
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 0.9em;
+        }
+        .dt-load-summary {
+            text-align: right;
+        }
+        .dt-load-summary span {
+             margin-left: 15px;
+        }
+        .dt-load-summary input {
+             width: 100px; 
+             padding: 6px; 
+             border-radius: 4px;
+             background-color: #e9ecef;
+             font-weight: bold;
+             text-align: right;
+             border: 1px solid #ccc;
+        }
+        .dt-inputs-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .dt-inputs-container input {
+            width: 90px;
+            padding: 6px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .dt-inputs-container input.invalid-input {
+            border-color: red;
+            box-shadow: 0 0 3px red;
+        }
+
+        .button-group {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .button-group button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .button-group button.primary { background-color: #007bff; color: white; }
+        .button-group button.secondary { background-color: #6c757d; color: white; }
+        .button-group button.danger { background-color: #dc3545; color: white; }
+        .button-group button.add-section { background-color: #28a745; color: white; }
+
+        .remove-section-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            white-space: nowrap;
+            justify-self: center;
+            align-self: center;
+        }
+        .results-area {
+            margin-top: 30px;
+            border-top: 2px solid #0056b3;
+            padding-top: 20px;
+        }
+        .results-area p {
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        .results-area table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.8em;
+        }
+        .results-area table th,
+        .results-area table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .results-area table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        /* --- PRINT-SPECIFIC STYLES --- */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .container {
+                box-shadow: none;
+                border: none;
+                padding: 0;
+                max-width: 100%;
+            }
+            body {
+                background-color: #fff;
+                margin: 10px;
+            }
+            input, select {
+                border: none !important;
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+            }
+            .input-column-headers, .section-input-row {
+                 grid-template-columns: 1fr 1fr 1fr;
+            }
+            .dt-section {
+                 display: none;
+            }
+            .results-area table {
+                font-size: 0.7em;
+            }
+            .results-area table th,
+            .results-area table td {
+                padding: 3px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="no-print">11kV Feeder Voltage Drop Calculator</h1>
+        <p class="no-print">Based on S.I. No. 7, Date-26.3.92 - UPDATED STANDARDISATION INSTRUCTION NO.7 (by Er. Ranjit Singh ASE 9501381364)</p>
+
+        <div class="input-group no-print">
+            <label for="feederName">Feeder Name:</label>
+            <input type="text" id="feederName" placeholder="e.g., Main Line Feeder 1" value="Main Line Feeder">
+        </div>
+
+        <div class="input-group no-print">
+            <label for="maxDemandAmps">Maximum Demand on Feeder in Amperes:</label>
+            <input type="number" id="maxDemandAmps" min="0" value="100" placeholder="e.g., 100 Amps">
+        </div>
+
+        <div class="input-group no-print">
+            <label for="newLoadKVA">New load in kVA to be released (Enter 0 if none):</label>
+            <input type="number" id="newLoadKVA" min="0" value="0" placeholder="kVA of new load">
+        </div>
+
+        <div class="input-group no-print">
+            <label for="powerFactor">Select Power Factor:</label>
+            <select id="powerFactor">
+                <option value="0.8">0.8 (Power Factor)</option>
+                <option value="0.85" selected>0.85 (Power Factor)</option>
+            </select>
+        </div>
+
+        <h2 class="no-print">Feeder Sections (Start punching kVA of DTs from tail end)</h2>
+        <div id="sectionsContainer" class="no-print">
+            <!-- Section inputs will be dynamically added here -->
+        </div>
+
+        <div class="button-group no-print">
+            <button class="add-section" onclick="addSection()">Add Section</button>
+            <button class="primary" onclick="calculateVoltageDrop()">Calculate Voltage Drop</button>
+            <button class="secondary" onclick="resetForm()">Reset Form</button>
+            <button class="secondary" onclick="printPage()">Print Results</button>
+        </div>
+
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+        <div class="results-area" id="resultsArea" style="display: none;">
+            <h2>Calculation Results for Feeder: <span id="outputFeederName"></span></h2>
+            
+            <p>Existing Maximum Demand (from Amps): <span id="maxDemandKVAResult"></span> kVA</p>
+            <p>New Load to be Released: <span id="newLoadKVAResult"></span> kVA</p>
+            <p><strong>Total Demand after New Load: <span id="totalDemandKVAResult"></span> kVA</strong></p>
+            <p>Load Factor (based on Total Demand): <span id="loadFactorResult"></span></p>
+
+            <h3>Sectional Voltage Drops</h3>
+            <table id="sectionResultsTable">
+                <thead>
+                    <tr>
+                        <th>Section</th>
+                        <th>Cable Type</th>
+                        <th>Conductor Size (mm²)</th>
+                        <th>Current Capacity (A)</th>
+                        <th>kVA Capacity (kVA)</th>
+                        <th>Length (m)</th>
+                        <th>Section Load (kVA)</th>
+                        <th>Cumulative Load (kVA)</th>
+                        <th>Local DTs (kVA)</th>
+                        <th>Section VD (V)</th>
+                        <th>Section % VD</th>
+                        <th>Cumulative VD (V)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Results will be inserted here -->
+                </tbody>
+            </table>
+
+            <p>Total Cumulative Voltage Drop: <span id="totalVdResult"></span> Volts</p>
+            <p>Total Voltage Drop with Load Factor: <span id="totalVdWithLfResult"></span> Volts</p>
+            <p>Total Percentage Voltage Drop: <span id="totalVdPercentageResult"></span> %</p>
+        </div>
+    </div>
+
+    <script>
+        const acsrVoltageDropData = {
+            '0.8': {'30':0.0991, '50':0.0662, '80':0.0499, '100':0.0415},
+            '0.85': {'30':0.1017, '50':0.0669, '80':0.0497, '100':0.0408}
+        };
+        const acsrConductorCapacities = {
+            '30':{currentCapacityA:100, kvaCapacity:1905}, '50':{currentCapacityA:148, kvaCapacity:2819},
+            '80':{currentCapacityA:197, kvaCapacity:3753}, '100':{currentCapacityA:254, kvaCapacity:4839}
+        };
+        const xlpeCableData = {
+            '35':{R:1.090, X:0.143, currentCapacityA:{air:124, ground:84.40}}, '50':{R:0.805, X:0.133, currentCapacityA:{air:157, ground:98.46}},
+            '70':{R:0.558, X:0.126, currentCapacityA:{air:196, ground:122.23}}, '95':{R:0.401, X:0.120, currentCapacityA:{air:238, ground:142.60}},
+            '120':{R:0.319, X:0.116, currentCapacityA:{air:274, ground:162.97}}, '150':{R:0.260, X:0.112, currentCapacityA:{air:310, ground:183.34}},
+            '185':{R:0.207, X:0.108, currentCapacityA:{air:355, ground:207.11}}, '240':{R:0.157, X:0.103, currentCapacityA:{air:403, ground:241.00}},
+            '300':{R:0.126, X:0.100, currentCapacityA:{air:422, ground:271.62}}, '400':{R:0.0997, X:0.0977, currentCapacityA:{air:481, ground:312.37}}
+        };
+
+        const VALID_DT_KVA = [16, 25, 63, 100, 200, 315, 500];
+        const DT_KVA_ERROR_MESSAGE = `Invalid kVA. Valid values are: ${VALID_DT_KVA.join(', ')}.`;
+        const acsrConductorSizes = Object.keys(acsrConductorCapacities);
+        const xlpeConductorSizes = Object.keys(xlpeCableData);
+        let sectionCount = 0;
+        const KILO_VOLTS = 11;
+        const SYSTEM_VOLTAGE_VOLTS = KILO_VOLTS * 1000;
+        const SQRT_3 = Math.sqrt(3);
+
+        document.addEventListener('DOMContentLoaded', () => { addSection(); });
+
+        function getSectionName(index) {
+            const startChar = String.fromCharCode(65 + index);
+            const endChar = String.fromCharCode(66 + index);
+            return `Section ${startChar}-${endChar}`;
+        }
+
+        function addSection() {
+            sectionCount++;
+            const sectionsContainer = document.getElementById('sectionsContainer');
+            const sectionDiv = document.createElement('div');
+            sectionDiv.classList.add('feeder-section');
+            sectionDiv.id = `section-${sectionCount}`;
+            // --- MODIFICATION START ---
+            // Swapped the "Conductor Size" and "Length" elements and their headers.
+            sectionDiv.innerHTML = `
+                <div class="section-header">
+                    <span>${getSectionName(sectionCount - 1)}</span>
+                    <button class="remove-section-btn" onclick="removeSection('section-${sectionCount}')">Remove</button>
+                </div>
+                <div class="input-column-headers">
+                    <span>Cable Type</span><span>Length (meters)</span><span>Conductor Size (mm²)</span><span></span>
+                </div>
+                <div class="section-input-row">
+                    <div><select id="cableType-${sectionCount}" onchange="updateConductorSizes(${sectionCount})"><option value="ACSR" selected>ACSR</option><option value="XLPE">XLPE</option></select></div>
+                    <div><input type="number" id="sectionLength-${sectionCount}" min="0" step="1" value="1000" placeholder="Length in meters"></div>
+                    <div><select id="conductorSize-${sectionCount}"></select></div>
+                    <div></div>
+                </div>
+                <div class="dt-section">
+                    <div class="dt-section-header">
+                        <span>Local Distribution Transformers (kVA)</span>
+                        <div class="dt-load-summary">
+                             <span>Section Load (kVA): <input type="number" id="sectionKVAload-${sectionCount}" value="0" readonly></span>
+                             <span>Cumulative Load (kVA): <input type="number" id="cumulativeKVAload-${sectionCount}" value="0" readonly></span>
+                        </div>
+                    </div>
+                    <div class="dt-inputs-container" id="dtInputsContainer-${sectionCount}">
+                        <input type="number" min="0" placeholder="DT kVA" oninput="handleDtInput(this, ${sectionCount})">
+                    </div>
+                </div>`;
+            // --- MODIFICATION END ---
+            sectionsContainer.appendChild(sectionDiv);
+            updateConductorSizes(sectionCount);
+            updateAllLoads();
+        }
+
+        function updateConductorSizes(sectionNum) {
+            const cableTypeSelect = document.getElementById(`cableType-${sectionNum}`);
+            const conductorSizeSelect = document.getElementById(`conductorSize-${sectionNum}`);
+            const selectedCableType = cableTypeSelect.value;
+            conductorSizeSelect.innerHTML = '';
+            let sizes = (selectedCableType === 'ACSR') ? acsrConductorSizes : xlpeConductorSizes;
+            sizes.forEach(size => {
+                const option = document.createElement('option');
+                option.value = size;
+                option.textContent = `${size} mm²`;
+                conductorSizeSelect.appendChild(option);
+            });
+        }
+        
+        function updateAllLoads() {
+            let cumulativeKva = 0;
+            const sections = document.querySelectorAll('.feeder-section');
+            sections.forEach(section => {
+                const sectionId = section.id.split('-')[1];
+                const dtContainer = document.getElementById(`dtInputsContainer-${sectionId}`);
+                const sectionLoadInput = document.getElementById(`sectionKVAload-${sectionId}`);
+                const cumulativeLoadInput = document.getElementById(`cumulativeKVAload-${sectionId}`);
+                if (!dtContainer || !sectionLoadInput || !cumulativeLoadInput) return;
+
+                const dtInputs = dtContainer.querySelectorAll('input');
+                let localTotalKva = 0;
+                dtInputs.forEach(input => {
+                    const kva = parseFloat(input.value);
+                    if (!isNaN(kva) && kva > 0 && VALID_DT_KVA.includes(kva)) {
+                        localTotalKva += kva;
+                    }
+                });
+                sectionLoadInput.value = localTotalKva.toFixed(2);
+                cumulativeKva += localTotalKva;
+                cumulativeLoadInput.value = cumulativeKva.toFixed(2);
+            });
+        }
+
+        function handleDtInput(currentInput, sectionNum) {
+            const kvaValue = parseFloat(currentInput.value);
+            const isEmpty = currentInput.value.trim() === '';
+
+            // --- Validation Logic ---
+            if (!isEmpty && !VALID_DT_KVA.includes(kvaValue)) {
+                currentInput.classList.add('invalid-input');
+                currentInput.title = DT_KVA_ERROR_MESSAGE;
+            } else {
+                currentInput.classList.remove('invalid-input');
+                currentInput.title = '';
+            }
+
+            updateAllLoads();
+            
+            const container = document.getElementById(`dtInputsContainer-${sectionNum}`);
+            const allInputs = Array.from(container.querySelectorAll('input'));
+            const isLastInput = currentInput === allInputs[allInputs.length - 1];
+            
+            if (isLastInput && !isEmpty) {
+                const newInput = document.createElement('input');
+                newInput.type = 'number';
+                newInput.min = '0';
+                newInput.placeholder = 'DT kVA';
+                newInput.oninput = () => handleDtInput(newInput, sectionNum);
+                container.appendChild(newInput);
+            }
+        }
+
+        function removeSection(sectionId) {
+            if (document.querySelectorAll('.feeder-section').length > 1) {
+                document.getElementById(sectionId).remove();
+                relabelSections();
+            } else {
+                displayError("Cannot remove the last section.");
+            }
+        }
+
+        function relabelSections() {
+            const sections = document.querySelectorAll('.feeder-section');
+            sectionCount = 0;
+            sections.forEach((section, index) => {
+                sectionCount++;
+                const newId = sectionCount;
+                section.id = `section-${newId}`;
+                section.querySelector('.section-header span').textContent = getSectionName(index);
+                section.querySelector('.remove-section-btn').setAttribute('onclick', `removeSection('section-${newId}')`);
+                section.querySelector(`select[id^="cableType-"]`).id = `cableType-${newId}`;
+                section.querySelector(`select[id^="conductorSize-"]`).id = `conductorSize-${newId}`;
+                section.querySelector(`input[id^="sectionLength-"]`).id = `sectionLength-${newId}`;
+                
+                section.querySelector('input[id^="sectionKVAload-"]').id = `sectionKVAload-${newId}`;
+                section.querySelector('input[id^="cumulativeKVAload-"]').id = `cumulativeKVAload-${newId}`;
+                const dtContainer = section.querySelector('.dt-inputs-container');
+                dtContainer.id = `dtInputsContainer-${newId}`;
+                const dtInputs = dtContainer.querySelectorAll('input');
+                dtInputs.forEach(input => {
+                    const currentInput = input;
+                    currentInput.oninput = () => handleDtInput(currentInput, newId);
+                });
+                updateConductorSizes(newId);
+            });
+            updateAllLoads();
+        }
+
+        function displayError(message) {
+            const errorMessageDiv = document.getElementById('errorMessage');
+            errorMessageDiv.textContent = message;
+            errorMessageDiv.style.display = 'block';
+            document.getElementById('resultsArea').style.display = 'none';
+        }
+
+        function clearError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function calculateVoltageDrop() {
+            clearError();
+
+            // --- Pre-calculation validation check ---
+            let hasInvalidInput = false;
+            const allDtInputs = document.querySelectorAll('.dt-inputs-container input');
+            allDtInputs.forEach(input => {
+                if (input.classList.contains('invalid-input')) {
+                    hasInvalidInput = true;
+                }
+            });
+
+            if (hasInvalidInput) {
+                displayError("Please correct the invalid DT kVA values (highlighted in red) before calculating.");
+                return;
+            }
+            
+            const feederName = document.getElementById('feederName').value;
+            const maxDemandAmps = parseFloat(document.getElementById('maxDemandAmps').value);
+            const newLoadKVA = parseFloat(document.getElementById('newLoadKVA').value);
+            const powerFactor_cosTheta = parseFloat(document.getElementById('powerFactor').value);
+            const powerFactor_sinTheta = Math.sin(Math.acos(powerFactor_cosTheta));
+            const sections = document.querySelectorAll('.feeder-section');
+            const resultsTableBody = document.getElementById('sectionResultsTable').querySelector('tbody');
+            resultsTableBody.innerHTML = '';
+            document.getElementById('outputFeederName').textContent = feederName;
+
+            if (!feederName.trim()) { displayError("Please enter a Feeder Name."); return; }
+            if (isNaN(maxDemandAmps) || maxDemandAmps < 0) { displayError("Please enter a valid Maximum Demand in Amperes."); return; }
+            if (isNaN(newLoadKVA) || newLoadKVA < 0) { displayError("Please enter a valid New Load in kVA."); return; }
+
+            const existingMaxDemandKVA = (SQRT_3 * SYSTEM_VOLTAGE_VOLTS * maxDemandAmps) / 1000;
+            const totalMaxDemandAfterNewLoadKVA = existingMaxDemandKVA + newLoadKVA;
+            document.getElementById('maxDemandKVAResult').textContent = existingMaxDemandKVA.toFixed(2);
+            document.getElementById('newLoadKVAResult').textContent = newLoadKVA.toFixed(2);
+            document.getElementById('totalDemandKVAResult').textContent = totalMaxDemandAfterNewLoadKVA.toFixed(2);
+
+            let totalCumulativeVoltageDrop = 0;
+            let maxCumulativeLoadKVA = 0;
+            const sectionDataForCalc = [];
+
+            for (let i = 0; i < sections.length; i++) {
+                const section = sections[i];
+                const actualSectionId = section.id.split('-')[1];
+                
+                const cableType = document.getElementById(`cableType-${actualSectionId}`).value;
+                const conductorSize = document.getElementById(`conductorSize-${actualSectionId}`).value;
+                const sectionLengthMeters = parseFloat(document.getElementById(`sectionLength-${actualSectionId}`).value);
+                const sectionLoad = parseFloat(document.getElementById(`sectionKVAload-${actualSectionId}`).value);
+                const cumulativeLoadForThisSection = parseFloat(document.getElementById(`cumulativeKVAload-${actualSectionId}`).value);
+
+                const dtContainer = document.getElementById(`dtInputsContainer-${actualSectionId}`);
+                const dtInputs = dtContainer.querySelectorAll('input');
+                const dtValues = [];
+                dtInputs.forEach(input => {
+                    const kva = parseFloat(input.value);
+                    if (!isNaN(kva) && kva > 0) {
+                        dtValues.push(kva);
+                    }
+                });
+                const dtListString = dtValues.join(', ') || '0';
+
+                if (cumulativeLoadForThisSection > maxCumulativeLoadKVA) { maxCumulativeLoadKVA = cumulativeLoadForThisSection; }
+                if (isNaN(sectionLengthMeters) || sectionLengthMeters <= 0) { displayError(`${getSectionName(i)}: Invalid Length.`); return; }
+                if (isNaN(cumulativeLoadForThisSection)) { displayError(`${getSectionName(i)}: Invalid kVA Load.`); return; }
+
+                let currentCapacity, kvaCapacityForConductor, sectionVoltageDrop;
+                if (cableType === 'ACSR') {
+                    const conductorInfo = acsrConductorCapacities[conductorSize];
+                    currentCapacity = conductorInfo.currentCapacityA;
+                    kvaCapacityForConductor = conductorInfo.kvaCapacity;
+                    const vdPerKmPerKVA = acsrVoltageDropData[powerFactor_cosTheta][conductorSize];
+                    sectionVoltageDrop = vdPerKmPerKVA * cumulativeLoadForThisSection * (sectionLengthMeters / 1000);
+                } else { // XLPE
+                    const xlpeInfo = xlpeCableData[conductorSize];
+                    currentCapacity = { air: xlpeInfo.currentCapacityA.air, ground: xlpeInfo.currentCapacityA.ground };
+                    kvaCapacityForConductor = { air: (SQRT_3 * SYSTEM_VOLTAGE_VOLTS * currentCapacity.air) / 1000, ground: (SQRT_3 * SYSTEM_VOLTAGE_VOLTS * currentCapacity.ground) / 1000 };
+                    const I_section_load = (cumulativeLoadForThisSection * 1000) / (SQRT_3 * SYSTEM_VOLTAGE_VOLTS);
+                    sectionVoltageDrop = SQRT_3 * I_section_load * (xlpeInfo.R * powerFactor_cosTheta + xlpeInfo.X * powerFactor_sinTheta) * (sectionLengthMeters / 1000);
+                }
+                const sectionVdPercentage = (sectionVoltageDrop / SYSTEM_VOLTAGE_VOLTS) * 100;
+                sectionDataForCalc.push({
+                    name: getSectionName(i), cableType, conductorSize, currentCapacity, kvaCapacity: kvaCapacityForConductor,
+                    length: sectionLengthMeters, sectionLoad: sectionLoad, cumulativeKVA: cumulativeLoadForThisSection, dtList: dtListString, sectionVoltageDrop, sectionVdPercentage
+                });
+            }
+
+            let loadFactor = (maxCumulativeLoadKVA > 0) ? (totalMaxDemandAfterNewLoadKVA / maxCumulativeLoadKVA) : 0;
+            if (loadFactor > 1.0) { loadFactor = 1.0; }
+            document.getElementById('loadFactorResult').textContent = loadFactor.toFixed(4);
+
+            sectionDataForCalc.forEach(data => {
+                totalCumulativeVoltageDrop += data.sectionVoltageDrop;
+                const row = resultsTableBody.insertRow();
+                row.insertCell().textContent = data.name;
+                row.insertCell().textContent = data.cableType;
+                row.insertCell().textContent = data.conductorSize;
+                row.insertCell().textContent = (data.cableType === 'ACSR') ? data.currentCapacity.toFixed(0) : `${data.currentCapacity.air.toFixed(0)} / ${data.currentCapacity.ground.toFixed(0)}`;
+                row.insertCell().textContent = (data.cableType === 'ACSR') ? data.kvaCapacity.toFixed(2) : `${data.kvaCapacity.air.toFixed(2)} / ${data.kvaCapacity.ground.toFixed(2)}`;
+                row.insertCell().textContent = data.length.toFixed(2);
+                row.insertCell().textContent = data.sectionLoad.toFixed(2);
+                row.insertCell().textContent = data.cumulativeKVA.toFixed(2);
+                row.insertCell().textContent = data.dtList; 
+                row.insertCell().textContent = data.sectionVoltageDrop.toFixed(2);
+                row.insertCell().textContent = data.sectionVdPercentage.toFixed(2);
+                row.insertCell().textContent = totalCumulativeVoltageDrop.toFixed(2);
+            });
+
+            const totalVdWithLf = totalCumulativeVoltageDrop * loadFactor;
+            const totalVdPercentage = (totalVdWithLf / SYSTEM_VOLTAGE_VOLTS) * 100;
+            document.getElementById('totalVdResult').textContent = totalCumulativeVoltageDrop.toFixed(2);
+            document.getElementById('totalVdWithLfResult').textContent = totalVdWithLf.toFixed(2);
+            document.getElementById('totalVdPercentageResult').textContent = totalVdPercentage.toFixed(2);
+            document.getElementById('resultsArea').style.display = 'block';
+        }
+
+        function resetForm() {
+            if (confirm('Are you sure you want to reset the form?')) {
+                document.getElementById('feederName').value = 'Main Line Feeder';
+                document.getElementById('maxDemandAmps').value = '100';
+                document.getElementById('newLoadKVA').value = '0';
+                document.getElementById('powerFactor').value = '0.85';
+                document.getElementById('sectionsContainer').innerHTML = '';
+                sectionCount = 0;
+                addSection();
+                document.getElementById('resultsArea').style.display = 'none';
+                clearError();
+            }
+        }
+
+        function printPage() {
+            window.print();
+        }
+
+    </script>
+</body>
+</html>
